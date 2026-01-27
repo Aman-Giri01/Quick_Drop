@@ -10,8 +10,8 @@ export const fetchProducts = expressAsyncHandler(async (req, res, next) => {
 });
 
 export const fetchProduct = expressAsyncHandler(async (req, res, next) => {
-  const { productId } = req.params;
-  const product = await ProductModel.findById(productId);
+  const { id } = req.params;
+  const product = await ProductModel.findById(id);
   if (!product) next(new CustomError(404, "Product Not Found"));
   new ApiResponse(200, "Product Fetched Successfully", product).send(res);
 });

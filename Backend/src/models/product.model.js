@@ -33,7 +33,7 @@ const productSchema = new mongoose.Schema(
     },
     stocks: {
       type: Number,
-    //   required: true,
+      required: true,
     },
   },
   {
