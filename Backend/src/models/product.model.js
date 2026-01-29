@@ -19,8 +19,17 @@ const productSchema = new mongoose.Schema(
       {
         url: {
           type: String,
-        //   required: true,
+          required: true,
         },
+        asset_id: {
+          type: String,
+          required: true,
+        },
+        public_id: {
+          type: String,
+          required: true,
+        },
+        _id: false,
       },
     ],
     category: {
