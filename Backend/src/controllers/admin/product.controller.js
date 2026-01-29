@@ -1,7 +1,7 @@
 import expressAsyncHandler from "express-async-handler";
 import ApiResponse from "../../utils/ApiResponse.util.js";
 import ProductModel from "../../models/product.model.js";
-import CustomError from "../../utils/CustomError.util.js";
+import CustomError from "../../utils/customError.util.js";
 
 export const addProduct = expressAsyncHandler(async (req, res) => {
   const { name, description, price, category, brand, stocks } = req.body;

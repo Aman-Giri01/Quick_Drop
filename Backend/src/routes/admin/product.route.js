@@ -3,7 +3,7 @@ import { addProduct, deleteProduct, updateProduct } from "../../controllers/admi
 
 const router = Router();
 
-router.post('/add', addProduct)
+router.post('/add',upload.single("images"), addProduct)
 router.put('/:id', updateProduct)
 router.delete('/:id', deleteProduct)
 

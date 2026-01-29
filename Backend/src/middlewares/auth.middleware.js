@@ -1,0 +1,20 @@
+import expressAsyncHandler from "express-async-handler";
+import CustomError from "../utils/customError.util.js";
+import jwt from "jsonwebtoken";
+import userModel from "../models/user.model.js";
+
+export const authenticate=expressAsyncHandler(async(req,res,next)=>{
+    let token=req?.cookies?.token;
+    if(!token || token=== undefined){
+        return next(new CustomError(401,"Please login to access this route."));
+    }
+    let decodedToken=jwt.verify(token,process.env.JWT_SECRET);
+    let user=await userModel.findById(decodedToken.id);
+    if(!user){
+        return next(new CustomError(401,"Invalid session please login again"))
+    }
+
+     req.myUser=user;
+     next();
+
+})
