@@ -6,6 +6,8 @@ import {
   deleteUploadedImage,
   uploadImage,
 } from "../../utils/cloudinary.util.js";
+import { addProductValidator, updateProductValidator } from "../../validators/product.validator.js";
+import { validate } from "../../middlewares/validate.middleware.js";
 
 export const getURL = (bufferValue, mimetype) => {
   const b64 = bufferValue.toString("base64");
@@ -13,14 +15,24 @@ export const getURL = (bufferValue, mimetype) => {
   return imageURL;
 };
 
-export const addProduct = expressAsyncHandler(async (req, res) => {
-  const bufferValue = req?.file?.buffer;
+export const addProduct = expressAsyncHandler(async (req, res, next) => {
+  if (!req.file) {
+    return next(new CustomError("Product image is required", 400));
+  }
+  const { error, value } = addProductValidator.validate(req.body, {
+    abortEarly: false,
+  });
+  if (error) {
+    return next(
+      new CustomError(400, error.details.map((ele) => ele.message).join(", "))
+    );
+  }
+
+  const bufferValue = req.file.buffer;
   const imageURL = getURL(bufferValue, req.file.mimetype);
-
   const uploadedImage = await uploadImage(imageURL);
-  console.log(uploadedImage);
 
-  let imgArr = [
+  const imgArr = [
     {
       url: uploadedImage.secure_url,
       public_id: uploadedImage.public_id,
@@ -28,8 +40,7 @@ export const addProduct = expressAsyncHandler(async (req, res) => {
     },
   ];
 
-  const { name, description, price, category, brand, stocks } = req.body;
-
+  const { name, description, price, category, brand, stocks } = value;
   const newProduct = await ProductModel.create({
     name,
     description,
@@ -39,12 +50,23 @@ export const addProduct = expressAsyncHandler(async (req, res) => {
     brand,
     stocks,
   });
+  if (!newProduct) {
+    return next(new CustomError(404, "Cannot add product"));
+  }
 
   new ApiResponse(201, "Product Added Successfully", newProduct).send(res);
 });
 
 export const updateProduct = expressAsyncHandler(async (req, res, next) => {
   const { id } = req.params;
+    const { error, value } = updateProductValidator.validate(req.body, {
+    abortEarly: false,
+  });
+  if (error) {
+    return next(
+      new CustomError(400, error.details.map((ele) => ele.message).join(", "))
+    );
+  }
   const updateProduct = await ProductModel.findByIdAndUpdate(id, req.body, {
     new: true,
     runValidators: true,
