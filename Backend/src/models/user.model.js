@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      lowercase:true,
+      lowercase: true,
       unique: true,
     },
     password: {
@@ -72,11 +72,6 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-// userSchema.pre("save",async function(next){
-//     if(!this.isModified("password")) return next();
-//     this.password=await bcrypt.hash(this.password,10);
-
-// });
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   //? this function will only execute when the modified field is  password
@@ -105,7 +100,7 @@ userSchema.methods.generatePasswordVerificationToken = function () {
     .createHash("sha256")
     .update(randomByte)
     .digest("hex");
-  this.passwordVerificationTokenExpire=Date.now()+5 *60*1000;
+  this.passwordVerificationTokenExpire = Date.now() + 5 * 60 * 1000;
   return randomByte;
 };
 const userModel = new mongoose.model("User", userSchema);

@@ -19,7 +19,6 @@ export const registerUser = expressAsyncHandler(async (req, res, next) => {
   });
 
   let emailVerificationToken = newUser.generateEmailVerificationToken();
-  console.log(emailVerificationToken);
   await newUser.save();
 
   let verification_url = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
@@ -46,7 +45,7 @@ export const verifyEmail = expressAsyncHandler(async (req, res, next) => {
 
   let user = await userModel.findOne({
     emailVerificationToken: hashedToken,
-    emailVerificationTokenExpiry: { $gt: Date.now() },
+    emailVerificationTokenExpire: { $gt: Date.now() },
   });
 
   if (!user) return next(new CustomError(400, "Token expired"));
@@ -55,7 +54,7 @@ export const verifyEmail = expressAsyncHandler(async (req, res, next) => {
 
   user.isVerified = true;
   user.emailVerificationToken = undefined;
-  user.emailVerificationTokenExpiry = undefined;
+  user.emailVerificationTokenExpire = undefined;
   await user.save();
 
   new ApiResponse(200, "Email verified successfully").send(res);
@@ -71,7 +70,7 @@ export const resendEmailVerificationLink = expressAsyncHandler(
     let existingUser = await userModel.findOne({ email });
     if (!existingUser) return next(new CustomError(404, "Email not found"));
     if (existingUser.isVerified) {
-      return next(new CustomError("400", "Email already verified"));
+      return next(new CustomError(400, "Email already verified"));
     }
 
     let emailVerificationToken = existingUser.generateEmailVerificationToken();
@@ -80,7 +79,8 @@ export const resendEmailVerificationLink = expressAsyncHandler(
 
     await sendEmail(
       email,
-      "Email verification"`<h1> this is for verification</h1> <a href="${verification_url}">Click Here</a> <h3> ${emailVerificationToken} </h3>`,
+      "Resend Email Verification",
+      `<h1> this is for verification</h1> <a href="${verification_url}">Click Here</a> <h3> ${emailVerificationToken} </h3>`,
     );
 
     new ApiResponse(200, "Verification link sent successfully").send(res);
@@ -148,7 +148,6 @@ export const changePassword = expressAsyncHandler(async (req, res, next) => {
   const existingUser = await userModel
     .findById(req.myUser.id)
     .select("+password");
-  console.log(existingUser.password);
   existingUser.password = req.body.password;
 
   await existingUser.save();
@@ -161,8 +160,10 @@ export const changePassword = expressAsyncHandler(async (req, res, next) => {
 
 export const forgotPassword = expressAsyncHandler(async (req, res, next) => {
   const { email } = req.body;
-  const existingUser = await userModel.findOne({ email, isVerified: true });
-  if (!existingUser) return next(new CustomError(404, "User not Found"));
+  // const existingUser = await userModel.findOne({ email, isVerified: true });
+  const existingUser = await userModel.findOne({ email });
+  if (!existingUser)
+    return next(new CustomError(404, "User not Found or not verified"));
 
   const passwordVerificationToken =
     existingUser.generatePasswordVerificationToken();
@@ -175,6 +176,7 @@ export const forgotPassword = expressAsyncHandler(async (req, res, next) => {
     `<h1> Password Reset</h1> <a href="${verification_url}">Click Here</a> <h3> ${passwordVerificationToken} </h3>`,
   );
 
+  await existingUser.save();
   new ApiResponse(
     200,
     `email sent to ${existingUser.email} successfully.`,
@@ -190,11 +192,10 @@ export const resetPassword = expressAsyncHandler(async (req, res, next) => {
   let hashedPassword = crypto
     .createHash("sha256")
     .update(passwordToken)
-    .digest(passwordToken);
-
+    .digest("hex");
   const user = await userModel.findOne({
     passwordVerificationToken: hashedPassword,
-    passwordVerificationTokenExpiry: { $gt: Date.now() },
+    passwordVerificationTokenExpire: { $gt: Date.now() },
   });
 
   if (!user) {
@@ -204,12 +205,12 @@ export const resetPassword = expressAsyncHandler(async (req, res, next) => {
   }
 
   if (req.body.password !== req.body.confirmPassword) {
-    return next(new CustomError(400, "Password do not Password"));
+    return next(new CustomError(400, "Password do not Matched"));
   }
 
   user.password = req.body.password;
   user.passwordVerificationToken = undefined;
-  user.passwordVerificationTokenExpiry = undefined;
+  user.passwordVerificationTokenExpire = undefined;
 
   await user.save();
 
@@ -219,11 +220,11 @@ export const resetPassword = expressAsyncHandler(async (req, res, next) => {
 // ! ----------------------------------------------------------------------------
 
 // ! ========================== Get Current User ================================
-export const currentUser=expressAsyncHandler(async(req,res,next)=>{
-  user=req.myUser;
-  if(!user){
-    return next(new CustomError("404","User not found"));
+export const currentUser = expressAsyncHandler(async (req, res, next) => {
+  let user = req.myUser;
+  if (!user) {
+    return next(new CustomError("404", "User not found"));
   }
-  new ApiResponse(200,"Current User:",user).send(res);
-})
-// ! ----------------------------------------------------------------------------
+  new ApiResponse(200, "Current User:", user).send(res);
+});
+// ! ----------------------------------------------------------------------------'
