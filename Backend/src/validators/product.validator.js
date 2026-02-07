@@ -11,9 +11,15 @@ export const addProductValidator = Joi.object({
   description: Joi.string().trim().min(5).required(),
   price: Joi.number().positive().required(),
   // images: Joi.array().items(imageSchema).min(1).required(),
-  category: Joi.string().trim().required(),
+  category: Joi.alternatives()
+    .try(Joi.string().trim(), Joi.array().items(Joi.string().trim()).min(1))
+    .required(),
+  subCategory: Joi.alternatives()
+    .try(Joi.string().trim(), Joi.array().items(Joi.string().trim()).min(1))
+    .optional(),
   brand: Joi.string().trim().required(),
   stocks: Joi.number().integer().min(0).required(),
+  discount: Joi.number().min(0).optional().allow(null),
 });
 
 export const updateProductValidator = Joi.object({
@@ -21,7 +27,13 @@ export const updateProductValidator = Joi.object({
   description: Joi.string().trim().min(5).optional(),
   price: Joi.number().positive().optional(),
   // images: Joi.array().items(imageSchema).min(1).optional(),
-  category: Joi.string().trim().optional(),
+  category: Joi.alternatives()
+    .try(Joi.string().trim(), Joi.array().items(Joi.string().trim()).min(1))
+    .optional(),
+  subCategory: Joi.alternatives()
+    .try(Joi.string().trim(), Joi.array().items(Joi.string().trim()).min(1))
+    .optional(),
   brand: Joi.string().trim().optional(),
   stocks: Joi.number().integer().min(0).optional(),
-})
+  discount: Joi.number().min(0).optional().allow(null),
+});

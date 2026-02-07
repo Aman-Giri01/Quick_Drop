@@ -15,6 +15,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    discount : {
+        type : Number,
+        default : null
+    },
     images: [
       {
         url: {
@@ -32,10 +36,18 @@ const productSchema = new mongoose.Schema(
         _id: false,
       },
     ],
-    category: {
-      type: String,
-      required: true,
-    },
+    category : [
+        {
+            type : mongoose.Schema.ObjectId,
+            ref : 'category'
+        }
+    ],
+    subCategory : [
+        {
+            type : mongoose.Schema.ObjectId,
+            ref : 'subCategory'
+        }
+    ],
     brand: {
       type: String,
       required: true,
