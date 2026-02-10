@@ -15,3 +15,5 @@ const mailTransport=nodemailer.createTransport({
 });
 
 export default mailTransport
+
+
